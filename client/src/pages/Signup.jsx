@@ -93,8 +93,8 @@ const Signup = () => {
         />
       </div>
 
-     <div className="relative z-10 flex h-full items-center justify-center px-5 py-6 sm:px-6">
-        <div className="grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="relative z-10 flex h-full items-center justify-center px-4 py-4 sm:px-6">
+        <div className="grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.82fr]">
           <MotionDiv
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -109,7 +109,8 @@ const Signup = () => {
             </div>
 
             <h1 className="max-w-2xl text-4xl font-bold leading-[1.05] tracking-[-0.04em] text-emerald-50 xl:text-6xl">
-              Create your account and access a cleaner, organized local waste management system.
+              Create your account and access a cleaner, organized local waste
+              management system.
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-emerald-100/70 xl:text-lg">
@@ -144,28 +145,29 @@ const Signup = () => {
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, ease: "easeOut" }}
-            className="relative mx-auto w-full max-w-md"
+            className="relative mx-auto w-full max-w-[460px]"
           >
             <div className="absolute inset-0 -z-10 rounded-full bg-emerald-400/10 blur-3xl" />
 
             <MotionDiv
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              className="glass-card rounded-[32px] p-6 sm:p-8"
+              className="glass-card rounded-[28px] px-5 py-5 sm:px-6 sm:py-6"
             >
-              <div className="mb-8 text-center">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.32em] text-emerald-200/55">
+              <div className="mb-5 text-center">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200/55">
                   Create Account
                 </p>
-                <h2 className="text-3xl font-bold tracking-tight text-emerald-50">
+                <h2 className="text-2xl font-bold tracking-tight text-emerald-50 sm:text-3xl">
                   Sign Up
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-                  Register to continue to the waste collection and reporting system.
+                  Register to continue to the waste collection and reporting
+                  system.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label
                     htmlFor="name"
@@ -180,7 +182,7 @@ const Signup = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    className="soft-input"
+                    className="soft-input py-3"
                     required
                   />
                 </div>
@@ -199,7 +201,7 @@ const Signup = () => {
                     value={form.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
-                    className="soft-input"
+                    className="soft-input py-3"
                     required
                   />
                 </div>
@@ -220,18 +222,18 @@ const Signup = () => {
                       value={form.password}
                       onChange={handleChange}
                       placeholder="Enter your password"
-                      className="soft-input pr-12"
+                      className="soft-input py-3 pr-12"
                       required
                     />
 
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/8 bg-white/6 text-emerald-100/70 transition duration-300 hover:bg-white/10 hover:text-white"
+                      className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/8 bg-white/6 text-emerald-100/70 transition duration-300 hover:bg-white/10 hover:text-white"
                     >
                       {showPassword ? (
                         <svg
-                          className="h-4.5 w-4.5"
+                          className="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -251,7 +253,7 @@ const Signup = () => {
                         </svg>
                       ) : (
                         <svg
-                          className="h-4.5 w-4.5"
+                          className="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -282,7 +284,7 @@ const Signup = () => {
                       name="barangay"
                       value={form.barangay}
                       onChange={handleChange}
-                      className="soft-input appearance-none pr-12 text-emerald-50"
+                      className="soft-input appearance-none py-3 pr-12 text-emerald-50"
                       required
                     >
                       <option value="" className="bg-[#0b1d17] text-emerald-50">
@@ -326,7 +328,7 @@ const Signup = () => {
                   whileHover={{ scale: 1.015 }}
                   whileTap={{ scale: 0.985 }}
                   type="submit"
-                  className="relative w-full overflow-hidden rounded-[18px] bg-gradient-to-r from-emerald-400 to-green-500 px-4 py-3.5 font-semibold text-slate-950 shadow-[0_14px_34px_rgba(34,197,94,0.24)] transition duration-300 hover:shadow-[0_18px_42px_rgba(34,197,94,0.3)]"
+                  className="relative w-full overflow-hidden rounded-[16px] bg-gradient-to-r from-emerald-400 to-green-500 px-4 py-3 font-semibold text-slate-950 shadow-[0_14px_34px_rgba(34,197,94,0.24)] transition duration-300 hover:shadow-[0_18px_42px_rgba(34,197,94,0.3)]"
                 >
                   <span className="relative z-10">Create Account</span>
 
@@ -338,7 +340,7 @@ const Signup = () => {
                 </MotionButton>
               </form>
 
-              <p className="mt-6 text-center text-sm text-emerald-100/68">
+              <p className="mt-5 text-center text-sm text-emerald-100/68">
                 Already have an account?{" "}
                 <Link
                   to="/"
