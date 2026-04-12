@@ -35,12 +35,16 @@ const Home = () => {
   }, [userInfo?.token]);
 
   const visibleAnnouncements = useMemo(() => {
+    const normalize = (value) => String(value || "").trim().toLowerCase();
+
     if (!user?.barangay) return announcements;
 
-    return announcements.filter(
-      (item) =>
-        item.targetBarangay === "All" || item.targetBarangay === user.barangay
-    );
+    return announcements.filter((item) => {
+      const target = normalize(item.targetBarangay);
+      const userBarangay = normalize(user.barangay);
+
+      return target === "all" || target === userBarangay;
+    });
   }, [announcements, user?.barangay]);
 
   const latestAnnouncement = visibleAnnouncements[0] || null;
