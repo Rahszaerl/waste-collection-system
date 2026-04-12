@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+} from "recharts";
 import BackgroundFx from "../../components/backgroundfx";
 import { getAllUsers } from "../../services/userService";
 import { getAllReports } from "../../services/reportService";
@@ -54,6 +66,18 @@ const AdminDashboard = () => {
     ).length;
   }, [reports]);
 
+  const inProgressReports = useMemo(() => {
+    return reports.filter(
+      (report) => String(report.status || "").toLowerCase() === "in progress"
+    ).length;
+  }, [reports]);
+
+  const resolvedReports = useMemo(() => {
+    return reports.filter(
+      (report) => String(report.status || "").toLowerCase() === "resolved"
+    ).length;
+  }, [reports]);
+
   const recentReports = useMemo(() => {
     return [...reports].slice(0, 2);
   }, [reports]);
@@ -94,39 +118,45 @@ const AdminDashboard = () => {
   ];
 
   const chartData = [
-    { label: "Users", value: users.length },
-    { label: "Reports", value: reports.length },
-    { label: "Schedules", value: schedules.length },
-    { label: "Announcements", value: announcements.length },
-    { label: "Pending", value: pendingReports },
+    { name: "Users", value: users.length },
+    { name: "Reports", value: reports.length },
+    { name: "Schedules", value: schedules.length },
+    { name: "Announcements", value: announcements.length },
+    { name: "Pending", value: pendingReports },
   ];
 
-  const maxChartValue = Math.max(...chartData.map((item) => item.value), 1);
-
-  const donutValues = [
-    { label: "Users", value: users.length, color: "#6ee7b7" },
-    { label: "Reports", value: reports.length, color: "#34d399" },
-    { label: "Schedules", value: schedules.length, color: "#10b981" },
-    { label: "Announcements", value: announcements.length, color: "#2dd4bf" },
+  const reportStatusData = [
+    { name: "Pending", value: pendingReports },
+    { name: "In Progress", value: inProgressReports },
+    { name: "Resolved", value: resolvedReports },
   ];
 
-  const donutTotal = Math.max(
-    donutValues.reduce((sum, item) => sum + item.value, 0),
-    1
+  const compositionData = [
+    { name: "Users", value: users.length, fill: "#6ee7b7" },
+    { name: "Reports", value: reports.length, fill: "#34d399" },
+    { name: "Schedules", value: schedules.length, fill: "#10b981" },
+    { name: "Announcements", value: announcements.length, fill: "#2dd4bf" },
+  ];
+
+  const compositionTotal = compositionData.reduce(
+    (sum, item) => sum + item.value,
+    0
   );
 
-  let accumulatedPercent = 0;
-  const donutSegments = donutValues.map((item) => {
-    const percent = (item.value / donutTotal) * 100;
-    const segment = {
-      ...item,
-      percent,
-      dashArray: `${percent} ${100 - percent}`,
-      dashOffset: -accumulatedPercent,
-    };
-    accumulatedPercent += percent;
-    return segment;
-  });
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+
+    return (
+      <div className="rounded-2xl border border-white/10 bg-[#071710]/95 px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-100/55">
+          {label || payload[0]?.name}
+        </p>
+        <p className="mt-1 text-sm font-semibold text-emerald-50">
+          {payload[0].value}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="app-shell h-screen overflow-hidden">
@@ -142,7 +172,8 @@ const AdminDashboard = () => {
               Control Center
             </h1>
             <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-              Administrative access for schedules, reports, users, and official announcements.
+              Administrative access for schedules, reports, users, and official
+              announcements.
             </p>
           </div>
 
@@ -245,104 +276,157 @@ const AdminDashboard = () => {
                       </h3>
                     </div>
                     <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/60">
-                      Live Counts
+                      Real Chart
                     </div>
                   </div>
 
-                  <div className="mt-5">
-                    <div className="grid h-[210px] items-end gap-4 rounded-[20px] border border-white/8 bg-black/20 p-4">
-                      <div className="flex h-full items-end justify-between gap-3">
-                        {chartData.map((item) => {
-                          const height = `${Math.max(
-                            (item.value / maxChartValue) * 100,
-                            12
-                          )}%`;
-
-                          return (
-                            <div
-                              key={item.label}
-                              className="flex h-full flex-1 flex-col items-center justify-end gap-3"
-                            >
-                              <span className="text-sm font-bold text-emerald-300">
-                                {item.value}
-                              </span>
-                              <div className="flex h-full w-full items-end justify-center">
-                                <div
-                                  className="w-full max-w-[72px] rounded-t-[18px] border border-emerald-300/15 bg-gradient-to-t from-emerald-500/70 via-emerald-400/40 to-emerald-300/20 shadow-[0_0_20px_rgba(16,185,129,0.14)]"
-                                  style={{ height }}
-                                />
-                              </div>
-                              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45 text-center">
-                                {item.label}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                  <div className="mt-5 h-[260px] rounded-[20px] border border-white/8 bg-black/20 p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} barCategoryGap={18}>
+                        <CartesianGrid
+                          stroke="rgba(255,255,255,0.06)"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: "rgba(236,253,245,0.55)", fontSize: 11 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          tick={{ fill: "rgba(236,253,245,0.45)", fontSize: 11 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip content={<CustomTooltip />} cursor={false} />
+                        <Bar
+                          dataKey="value"
+                          radius={[14, 14, 0, 0]}
+                          fill="#10b981"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </section>
 
-                <section className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
-                  <Link
-                    to="/admin/schedules"
-                    className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                      Section 01
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-emerald-50">
-                      Manage Schedules
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-                      Update collection dates and waste types.
-                    </p>
-                  </Link>
+                <section className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                          Report Status
+                        </p>
+                        <h3 className="mt-1 text-xl font-semibold text-emerald-50">
+                          Workflow overview
+                        </h3>
+                      </div>
+                    </div>
 
-                  <Link
-                    to="/admin/reports"
-                    className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                      Section 02
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-emerald-50">
-                      Manage Reports
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-                      Review and update report status.
-                    </p>
-                  </Link>
+                    <div className="mt-5 h-[220px] rounded-[20px] border border-white/8 bg-black/20 p-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={reportStatusData} barCategoryGap={24}>
+                          <CartesianGrid
+                            stroke="rgba(255,255,255,0.05)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fill: "rgba(236,253,245,0.55)", fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tick={{ fill: "rgba(236,253,245,0.45)", fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <Tooltip content={<CustomTooltip />} cursor={false} />
+                          <Bar
+                            dataKey="value"
+                            radius={[12, 12, 0, 0]}
+                            fill="#34d399"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
 
-                  <Link
-                    to="/admin/users"
-                    className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                      Section 03
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-emerald-50">
-                      Manage Users
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-                      Maintain users and roles.
-                    </p>
-                  </Link>
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                          Quick Access
+                        </p>
+                        <h3 className="mt-1 text-xl font-semibold text-emerald-50">
+                          Management sections
+                        </h3>
+                      </div>
+                    </div>
 
-                  <Link
-                    to="/admin/announcements"
-                    className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                      Section 04
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-emerald-50">
-                      Manage Announcements
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-                      Publish official notices and updates.
-                    </p>
-                  </Link>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <Link
+                        to="/admin/schedules"
+                        className="rounded-[20px] border border-white/8 bg-black/20 p-4 transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.05]"
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                          Section 01
+                        </p>
+                        <h4 className="mt-2 text-lg font-semibold text-emerald-50">
+                          Schedules
+                        </h4>
+                        <p className="mt-2 text-sm leading-6 text-emerald-100/65">
+                          Update collection plans.
+                        </p>
+                      </Link>
+
+                      <Link
+                        to="/admin/reports"
+                        className="rounded-[20px] border border-white/8 bg-black/20 p-4 transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.05]"
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                          Section 02
+                        </p>
+                        <h4 className="mt-2 text-lg font-semibold text-emerald-50">
+                          Reports
+                        </h4>
+                        <p className="mt-2 text-sm leading-6 text-emerald-100/65">
+                          Review submitted concerns.
+                        </p>
+                      </Link>
+
+                      <Link
+                        to="/admin/users"
+                        className="rounded-[20px] border border-white/8 bg-black/20 p-4 transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.05]"
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                          Section 03
+                        </p>
+                        <h4 className="mt-2 text-lg font-semibold text-emerald-50">
+                          Users
+                        </h4>
+                        <p className="mt-2 text-sm leading-6 text-emerald-100/65">
+                          Maintain users and roles.
+                        </p>
+                      </Link>
+
+                      <Link
+                        to="/admin/announcements"
+                        className="rounded-[20px] border border-white/8 bg-black/20 p-4 transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.05]"
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                          Section 04
+                        </p>
+                        <h4 className="mt-2 text-lg font-semibold text-emerald-50">
+                          Announcements
+                        </h4>
+                        <p className="mt-2 text-sm leading-6 text-emerald-100/65">
+                          Publish official notices.
+                        </p>
+                      </Link>
+                    </div>
+                  </div>
                 </section>
               </MotionDiv>
 
@@ -368,58 +452,49 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="mt-5 grid gap-5 lg:grid-cols-[180px_1fr] lg:items-center">
-                    <div className="mx-auto flex h-[170px] w-[170px] items-center justify-center">
-                      <div className="relative h-[150px] w-[150px]">
-                        <svg viewBox="0 0 42 42" className="h-full w-full -rotate-90">
-                          <circle
-                            cx="21"
-                            cy="21"
-                            r="15.915"
-                            fill="transparent"
-                            stroke="rgba(255,255,255,0.08)"
-                            strokeWidth="4"
-                          />
-                          {donutSegments.map((segment) => (
-                            <circle
-                              key={segment.label}
-                              cx="21"
-                              cy="21"
-                              r="15.915"
-                              fill="transparent"
-                              stroke={segment.color}
-                              strokeWidth="4"
-                              strokeDasharray={segment.dashArray}
-                              strokeDashoffset={segment.dashOffset}
-                              strokeLinecap="round"
-                              pathLength="100"
-                            />
-                          ))}
-                        </svg>
+                    <div className="mx-auto h-[170px] w-[170px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={compositionData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={44}
+                            outerRadius={70}
+                            paddingAngle={3}
+                            stroke="transparent"
+                          >
+                            {compositionData.map((entry) => (
+                              <Cell key={entry.name} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
 
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
-                            Total
-                          </span>
-                          <span className="mt-1 text-3xl font-bold text-emerald-50">
-                            {donutTotal}
-                          </span>
-                        </div>
+                      <div className="pointer-events-none -mt-[106px] flex flex-col items-center justify-center">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                          Total
+                        </span>
+                        <span className="mt-1 text-3xl font-bold text-emerald-50">
+                          {compositionTotal}
+                        </span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      {donutValues.map((item) => (
+                      {compositionData.map((item) => (
                         <div
-                          key={item.label}
+                          key={item.name}
                           className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-4 py-3"
                         >
                           <div className="flex items-center gap-3">
                             <span
                               className="h-3 w-3 rounded-full"
-                              style={{ backgroundColor: item.color }}
+                              style={{ backgroundColor: item.fill }}
                             />
                             <span className="text-sm font-semibold text-emerald-50">
-                              {item.label}
+                              {item.name}
                             </span>
                           </div>
 
