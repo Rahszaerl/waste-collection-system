@@ -12,12 +12,15 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageSchedules from "./pages/admin/ManageSchedules";
 import ManageReports from "./pages/admin/ManageReports";
 import ManageUsers from "./pages/admin/ManageUsers";
+import ManageAnnouncements from "./pages/admin/ManageAnnouncements";
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
         <Route
           path="/admin"
           element={
@@ -27,34 +30,43 @@ function App() {
           }
         />
 
-<Route
-  path="/admin/schedules"
-  element={
-    <AdminRoute>
-      <ManageSchedules />
-    </AdminRoute>
-  }
-/>
-
-<Route
-  path="/admin/reports"
-  element={
-    <AdminRoute>
-      <ManageReports />
-    </AdminRoute>
-  }
-/>
-
-<Route
-  path="/admin/users"
-  element={
-    <AdminRoute>
-      <ManageUsers />
-    </AdminRoute>
-  }
-/>
         <Route
-        
+          path="/admin/schedules"
+          element={
+            <AdminRoute>
+              <ManageSchedules />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <ManageReports />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <ManageUsers />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/announcements"
+          element={
+            <AdminRoute>
+              <ManageAnnouncements />
+            </AdminRoute>
+          }
+        />
+
+        <Route
           path="/home"
           element={
             <ProtectedRoute>

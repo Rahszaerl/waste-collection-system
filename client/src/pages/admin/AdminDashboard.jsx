@@ -5,6 +5,7 @@ import BackgroundFx from "../../components/backgroundfx";
 import { getAllUsers } from "../../services/userService";
 import { getAllReports } from "../../services/reportService";
 import { getSchedules } from "../../services/scheduleService";
+import { getAnnouncements } from "../../services/announcementService";
 
 const MotionDiv = motion.div;
 
@@ -15,20 +16,24 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [reports, setReports] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [usersData, reportsData, schedulesData] = await Promise.all([
-          getAllUsers(userInfo.token),
-          getAllReports(userInfo.token),
-          getSchedules(userInfo.token),
-        ]);
+        const [usersData, reportsData, schedulesData, announcementsData] =
+          await Promise.all([
+            getAllUsers(userInfo.token),
+            getAllReports(userInfo.token),
+            getSchedules(userInfo.token),
+            getAnnouncements(userInfo.token),
+          ]);
 
         setUsers(Array.isArray(usersData) ? usersData : []);
         setReports(Array.isArray(reportsData) ? reportsData : []);
         setSchedules(Array.isArray(schedulesData) ? schedulesData : []);
+        setAnnouncements(Array.isArray(announcementsData) ? announcementsData : []);
       } catch (error) {
         console.error("Failed to fetch admin dashboard data:", error);
       } finally {
@@ -53,11 +58,16 @@ const AdminDashboard = () => {
     return [...reports].slice(0, 2);
   }, [reports]);
 
+  const recentAnnouncements = useMemo(() => {
+    return [...announcements].slice(0, 2);
+  }, [announcements]);
+
   const sidebarLinks = [
     { to: "/admin", label: "Dashboard" },
     { to: "/admin/schedules", label: "Manage Schedules" },
     { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
+    { to: "/admin/announcements", label: "Manage Announcements" },
   ];
 
   const statCards = [
@@ -77,9 +87,9 @@ const AdminDashboard = () => {
       helper: "Schedule records",
     },
     {
-      label: "Pending Reports",
-      value: pendingReports,
-      helper: "Needs review",
+      label: "Announcements",
+      value: announcements.length,
+      helper: "Published notices",
     },
   ];
 
@@ -87,6 +97,7 @@ const AdminDashboard = () => {
     { label: "Users", value: users.length },
     { label: "Reports", value: reports.length },
     { label: "Schedules", value: schedules.length },
+    { label: "Announcements", value: announcements.length },
     { label: "Pending", value: pendingReports },
   ];
 
@@ -96,6 +107,7 @@ const AdminDashboard = () => {
     { label: "Users", value: users.length, color: "#6ee7b7" },
     { label: "Reports", value: reports.length, color: "#34d399" },
     { label: "Schedules", value: schedules.length, color: "#10b981" },
+    { label: "Announcements", value: announcements.length, color: "#2dd4bf" },
   ];
 
   const donutTotal = Math.max(
@@ -130,7 +142,7 @@ const AdminDashboard = () => {
               Control Center
             </h1>
             <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-              Administrative access for schedules, reports, and users.
+              Administrative access for schedules, reports, users, and official announcements.
             </p>
           </div>
 
@@ -238,7 +250,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <div className="mt-5">
-                    <div className="grid h-[190px] items-end gap-4 rounded-[20px] border border-white/8 bg-black/20 p-4">
+                    <div className="grid h-[210px] items-end gap-4 rounded-[20px] border border-white/8 bg-black/20 p-4">
                       <div className="flex h-full items-end justify-between gap-3">
                         {chartData.map((item) => {
                           const height = `${Math.max(
@@ -260,7 +272,7 @@ const AdminDashboard = () => {
                                   style={{ height }}
                                 />
                               </div>
-                              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45">
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/45 text-center">
                                 {item.label}
                               </span>
                             </div>
@@ -271,7 +283,7 @@ const AdminDashboard = () => {
                   </div>
                 </section>
 
-                <section className="grid gap-4 lg:grid-cols-3">
+                <section className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
                   <Link
                     to="/admin/schedules"
                     className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
@@ -314,6 +326,21 @@ const AdminDashboard = () => {
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-emerald-100/65">
                       Maintain users and roles.
+                    </p>
+                  </Link>
+
+                  <Link
+                    to="/admin/announcements"
+                    className="rounded-[22px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition duration-300 hover:border-emerald-300/20 hover:bg-white/[0.08]"
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                      Section 04
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-emerald-50">
+                      Manage Announcements
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-emerald-100/65">
+                      Publish official notices and updates.
                     </p>
                   </Link>
                 </section>
@@ -412,7 +439,7 @@ const AdminDashboard = () => {
                         Recent Reports
                       </p>
                       <h3 className="mt-1 text-xl font-semibold text-emerald-50">
-                        Latest activity
+                        Latest report activity
                       </h3>
                     </div>
 
@@ -432,13 +459,13 @@ const AdminDashboard = () => {
                           className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3"
                         >
                           <p className="text-sm font-semibold text-emerald-50">
-                            {report.barangay || "Unknown barangay"}
+                            {report.location || report.barangay || "Unknown barangay"}
                           </p>
                           <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-emerald-100/45">
                             {report.status || "No status"}
                           </p>
                           <p className="mt-2 line-clamp-2 text-sm leading-6 text-emerald-100/65">
-                            {report.issue ||
+                            {report.issueType ||
                               report.description ||
                               report.note ||
                               "No additional details"}
@@ -449,6 +476,56 @@ const AdminDashboard = () => {
                       <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-4">
                         <p className="text-sm text-emerald-100/65">
                           No recent report data available.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <section className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                        Recent Announcements
+                      </p>
+                      <h3 className="mt-1 text-xl font-semibold text-emerald-50">
+                        Latest notice activity
+                      </h3>
+                    </div>
+
+                    <Link
+                      to="/admin/announcements"
+                      className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/60 transition duration-300 hover:border-emerald-300/20 hover:text-emerald-50"
+                    >
+                      Open
+                    </Link>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {recentAnnouncements.length > 0 ? (
+                      recentAnnouncements.map((announcement) => (
+                        <div
+                          key={announcement._id}
+                          className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-emerald-50">
+                              {announcement.title}
+                            </p>
+                            <span className="inline-flex rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-200">
+                              {announcement.targetBarangay || "All"}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-emerald-100/65">
+                            {announcement.message || "No message"}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-4">
+                        <p className="text-sm text-emerald-100/65">
+                          No recent announcement data available.
                         </p>
                       </div>
                     )}

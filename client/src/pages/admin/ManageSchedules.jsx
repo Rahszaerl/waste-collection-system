@@ -108,6 +108,7 @@ const ManageSchedules = () => {
     { to: "/admin/schedules", label: "Manage Schedules" },
     { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
+    { to: "/admin/announcements", label: "Manage Announcements" },
   ];
 
   const upcomingCount = useMemo(
@@ -230,6 +231,7 @@ const ManageSchedules = () => {
             >
               Home
             </Link>
+            
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start">

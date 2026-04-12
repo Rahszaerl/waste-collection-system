@@ -62,6 +62,7 @@ const ManageReports = () => {
     { to: "/admin/schedules", label: "Manage Schedules" },
     { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
+    { to: "/admin/announcements", label: "Manage Announcements" },
   ];
 
   const pendingCount = useMemo(
@@ -171,6 +172,7 @@ const ManageReports = () => {
             >
               Home
             </Link>
+            
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

@@ -59,6 +59,7 @@ const ManageUsers = () => {
     { to: "/admin/schedules", label: "Manage Schedules" },
     { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
+    { to: "/admin/announcements", label: "Manage Announcements" },
   ];
 
   const adminCount = useMemo(
@@ -150,6 +151,7 @@ const ManageUsers = () => {
             >
               Home
             </Link>
+            
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
