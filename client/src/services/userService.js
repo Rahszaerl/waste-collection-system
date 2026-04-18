@@ -14,7 +14,7 @@ export const getAllUsers = async (token) => {
 
 export const updateUserRole = async (id, role, token) => {
   const response = await axios.put(
-    `${API_URL}/${id}`,
+    `${API_URL}/${id}/role`,
     { role },
     {
       headers: {
@@ -26,12 +26,16 @@ export const updateUserRole = async (id, role, token) => {
   return response.data;
 };
 
-export const deleteUser = async (id, token) => {
-  const response = await axios.delete(`${API_URL}/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export const updateUserStatus = async (id, status, token) => {
+  const response = await axios.put(
+    `${API_URL}/${id}/status`,
+    { status },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   return response.data;
 };

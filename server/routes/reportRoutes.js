@@ -12,7 +12,7 @@ import {
   deleteAnyReport,
 } from "../controllers/reportController.js";
 import protect from "../middleware/authMiddleware.js";
-import adminOnly from "../middleware/roleMiddleware.js";
+import authorizeRoles from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
@@ -58,8 +58,8 @@ router.get("/my-reports", protect, getMyReports);
 router.put("/my-reports/:id", protect, upload.single("photo"), updateMyReport);
 router.delete("/my-reports/:id", protect, deleteMyReport);
 
-router.get("/", protect, adminOnly, getAllReports);
-router.put("/:id", protect, adminOnly, updateReportStatus);
-router.delete("/:id", protect, adminOnly, deleteAnyReport);
+router.get("/", protect, authorizeRoles("operator"), getAllReports);
+router.put("/:id", protect, authorizeRoles("operator"), updateReportStatus);
+router.delete("/:id", protect, authorizeRoles("operator"), deleteAnyReport);
 
 export default router;

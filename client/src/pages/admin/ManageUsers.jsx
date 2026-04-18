@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BackgroundFx from "../../components/backgroundfx";
 import {
   getAllUsers,
   updateUserRole,
-  deleteUser,
+  updateUserStatus,
 } from "../../services/userService";
 
 const MotionDiv = motion.div;
@@ -17,6 +17,8 @@ const ManageUsers = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
   useEffect(() => {
+    if (!userInfo || userInfo.role !== "admin") return;
+
     const fetchUsers = async () => {
       try {
         const data = await getAllUsers(userInfo.token);
@@ -29,7 +31,7 @@ const ManageUsers = () => {
     };
 
     fetchUsers();
-  }, [userInfo.token]);
+  }, [userInfo]);
 
   const handleRoleChange = async (id, role) => {
     try {
@@ -42,22 +44,19 @@ const ManageUsers = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm("Delete this user?");
-    if (!confirmed) return;
-
+  const handleStatusChange = async (id, status) => {
     try {
-      await deleteUser(id, userInfo.token);
-      setUsers((prev) => prev.filter((user) => user._id !== id));
+      await updateUserStatus(id, status, userInfo.token);
+      setUsers((prev) =>
+        prev.map((user) => (user._id === id ? { ...user, status } : user))
+      );
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to delete user");
+      alert(error.response?.data?.message || "Failed to update user status");
     }
   };
 
   const sidebarLinks = [
     { to: "/admin", label: "Dashboard" },
-    { to: "/admin/schedules", label: "Manage Schedules" },
-    { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
     { to: "/admin/announcements", label: "Manage Announcements" },
   ];
@@ -69,10 +68,42 @@ const ManageUsers = () => {
     [users]
   );
 
+  const operatorCount = useMemo(
+    () =>
+      users.filter(
+        (user) => String(user.role || "").toLowerCase() === "operator"
+      ).length,
+    [users]
+  );
+
   const regularUserCount = useMemo(
     () =>
       users.filter((user) => String(user.role || "").toLowerCase() === "user")
         .length,
+    [users]
+  );
+
+  const activeCount = useMemo(
+    () =>
+      users.filter(
+        (user) => String(user.status || "").toLowerCase() === "active"
+      ).length,
+    [users]
+  );
+
+  const suspendedCount = useMemo(
+    () =>
+      users.filter(
+        (user) => String(user.status || "").toLowerCase() === "suspended"
+      ).length,
+    [users]
+  );
+
+  const bannedCount = useMemo(
+    () =>
+      users.filter(
+        (user) => String(user.status || "").toLowerCase() === "banned"
+      ).length,
     [users]
   );
 
@@ -83,8 +114,38 @@ const ManageUsers = () => {
       return "border-emerald-300/20 bg-emerald-400/10 text-emerald-200";
     }
 
+    if (normalized === "operator") {
+      return "border-violet-300/20 bg-violet-400/10 text-violet-200";
+    }
+
     return "border-cyan-300/20 bg-cyan-400/10 text-cyan-200";
   };
+
+  const getStatusClasses = (status) => {
+    const normalized = String(status || "").toLowerCase();
+
+    if (normalized === "active") {
+      return "border-emerald-300/20 bg-emerald-400/10 text-emerald-200";
+    }
+
+    if (normalized === "suspended") {
+      return "border-amber-300/20 bg-amber-400/10 text-amber-200";
+    }
+
+    if (normalized === "banned") {
+      return "border-red-300/20 bg-red-400/10 text-red-200";
+    }
+
+    return "border-white/10 bg-white/10 text-white";
+  };
+
+  if (!userInfo) {
+    return <Navigate to="/" />;
+  }
+
+  if (userInfo.role !== "admin") {
+    return <Navigate to="/admin" />;
+  }
 
   return (
     <div className="app-shell h-screen overflow-hidden">
@@ -100,7 +161,7 @@ const ManageUsers = () => {
               User Center
             </h1>
             <p className="mt-2 text-sm leading-6 text-emerald-100/65">
-              Manage user accounts, barangay assignments, and roles.
+              Manage user accounts, account status, and roles.
             </p>
           </div>
 
@@ -151,10 +212,9 @@ const ManageUsers = () => {
             >
               Home
             </Link>
-            
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <MotionDiv
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -162,37 +222,31 @@ const ManageUsers = () => {
               className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                Total Users
-              </p>
-              <p className="mt-2 text-3xl font-bold text-emerald-50">
-                {users.length}
-              </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                All registered accounts
-              </p>
-            </MotionDiv>
-
-            <MotionDiv
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.04 }}
-              className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                Admin Accounts
+                Admins
               </p>
               <p className="mt-2 text-3xl font-bold text-emerald-300">
                 {adminCount}
               </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                Elevated role access
+            </MotionDiv>
+
+            <MotionDiv
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.05 }}
+              className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                Operators
+              </p>
+              <p className="mt-2 text-3xl font-bold text-violet-300">
+                {operatorCount}
               </p>
             </MotionDiv>
 
             <MotionDiv
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.08 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
               className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
@@ -201,8 +255,47 @@ const ManageUsers = () => {
               <p className="mt-2 text-3xl font-bold text-cyan-200">
                 {regularUserCount}
               </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                Standard system accounts
+            </MotionDiv>
+
+            <MotionDiv
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+              className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                Active
+              </p>
+              <p className="mt-2 text-3xl font-bold text-emerald-300">
+                {activeCount}
+              </p>
+            </MotionDiv>
+
+            <MotionDiv
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                Suspended
+              </p>
+              <p className="mt-2 text-3xl font-bold text-amber-300">
+                {suspendedCount}
+              </p>
+            </MotionDiv>
+
+            <MotionDiv
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.25 }}
+              className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                Banned
+              </p>
+              <p className="mt-2 text-3xl font-bold text-red-300">
+                {bannedCount}
               </p>
             </MotionDiv>
           </div>
@@ -219,7 +312,7 @@ const ManageUsers = () => {
                   Records
                 </p>
                 <h3 className="mt-1 text-xl font-semibold text-emerald-50">
-                  User accounts
+                  Registered users
                 </h3>
               </div>
 
@@ -240,9 +333,6 @@ const ManageUsers = () => {
                 <p className="text-lg font-semibold text-emerald-50">
                   No users found
                 </p>
-                <p className="mt-2 text-sm text-emerald-100/65">
-                  User accounts will appear here once they are registered.
-                </p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -255,24 +345,33 @@ const ManageUsers = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-3">
                           <h4 className="text-lg font-semibold text-emerald-50">
-                            {user.name || "Unnamed User"}
+                            {user.name}
                           </h4>
+
                           <span
                             className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${getRoleClasses(
                               user.role
                             )}`}
                           >
-                            {user.role || "user"}
+                            {user.role}
+                          </span>
+
+                          <span
+                            className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${getStatusClasses(
+                              user.status
+                            )}`}
+                          >
+                            {user.status || "active"}
                           </span>
                         </div>
 
-                        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
                           <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
                             <p className="text-[11px] uppercase tracking-[0.16em] text-emerald-100/45">
                               Email
                             </p>
-                            <p className="mt-1 break-all text-sm font-medium text-emerald-50">
-                              {user.email || "No email"}
+                            <p className="mt-1 text-sm font-medium text-emerald-50">
+                              {user.email}
                             </p>
                           </div>
 
@@ -284,19 +383,10 @@ const ManageUsers = () => {
                               {user.barangay || "No barangay"}
                             </p>
                           </div>
-
-                          <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-3">
-                            <p className="text-[11px] uppercase tracking-[0.16em] text-emerald-100/45">
-                              Role
-                            </p>
-                            <p className="mt-1 text-sm font-medium capitalize text-emerald-50">
-                              {user.role || "user"}
-                            </p>
-                          </div>
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 flex-col gap-3 xl:w-[220px]">
+                      <div className="flex shrink-0 flex-col gap-3 xl:w-[260px]">
                         <div className="relative">
                           <select
                             className="soft-input appearance-none pr-12 text-emerald-50"
@@ -317,6 +407,12 @@ const ManageUsers = () => {
                             >
                               admin
                             </option>
+                            <option
+                              value="operator"
+                              className="bg-[#0b1d17] text-emerald-50"
+                            >
+                              operator
+                            </option>
                           </select>
 
                           <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-emerald-200/70">
@@ -336,12 +432,34 @@ const ManageUsers = () => {
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleDelete(user._id)}
-                          className="rounded-[16px] border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200 transition duration-300 hover:bg-red-500/15"
-                        >
-                          Delete User
-                        </button>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() =>
+                              handleStatusChange(user._id, "active")
+                            }
+                            className="rounded-[16px] border border-emerald-300/20 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-200 transition duration-300 hover:bg-emerald-500/15"
+                          >
+                            Activate
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleStatusChange(user._id, "suspended")
+                            }
+                            className="rounded-[16px] border border-amber-300/20 bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-200 transition duration-300 hover:bg-amber-500/15"
+                          >
+                            Suspend
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleStatusChange(user._id, "banned")
+                            }
+                            className="rounded-[16px] border border-red-300/20 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-200 transition duration-300 hover:bg-red-500/15"
+                          >
+                            Ban
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

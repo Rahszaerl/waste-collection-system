@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import BackgroundFx from "../../components/backgroundfx";
+import BackgroundFx from "../components/backgroundfx";
 import {
   getAllReports,
   updateReportStatus,
   deleteAnyReport,
-} from "../../services/reportService";
+} from "../services/reportService";
 
 const MotionDiv = motion.div;
 
@@ -17,6 +17,8 @@ const ManageReports = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
   useEffect(() => {
+    if (!userInfo || userInfo.role !== "operator") return;
+
     const fetchReports = async () => {
       try {
         const data = await getAllReports(userInfo.token);
@@ -29,7 +31,7 @@ const ManageReports = () => {
     };
 
     fetchReports();
-  }, [userInfo.token]);
+  }, [userInfo]);
 
   const handleStatusChange = async (id, status) => {
     try {
@@ -58,11 +60,8 @@ const ManageReports = () => {
   };
 
   const sidebarLinks = [
-    { to: "/admin", label: "Dashboard" },
-    { to: "/admin/schedules", label: "Manage Schedules" },
-    { to: "/admin/reports", label: "Manage Reports" },
-    { to: "/admin/users", label: "Manage Users" },
-    { to: "/admin/announcements", label: "Manage Announcements" },
+    { to: "/operator/reports", label: "Manage Reports" },
+    { to: "/operator/schedules", label: "Manage Schedules" },
   ];
 
   const pendingCount = useMemo(
@@ -73,10 +72,18 @@ const ManageReports = () => {
     [reports]
   );
 
-  const inProgressCount = useMemo(
+  const approvedCount = useMemo(
     () =>
       reports.filter(
-        (item) => String(item.status || "").toLowerCase() === "in progress"
+        (item) => String(item.status || "").toLowerCase() === "approved"
+      ).length,
+    [reports]
+  );
+
+  const rejectedCount = useMemo(
+    () =>
+      reports.filter(
+        (item) => String(item.status || "").toLowerCase() === "rejected"
       ).length,
     [reports]
   );
@@ -96,8 +103,12 @@ const ManageReports = () => {
       return "border-amber-300/20 bg-amber-400/10 text-amber-200";
     }
 
-    if (normalized === "in progress") {
+    if (normalized === "approved") {
       return "border-cyan-300/20 bg-cyan-400/10 text-cyan-200";
+    }
+
+    if (normalized === "rejected") {
+      return "border-red-300/20 bg-red-400/10 text-red-200";
     }
 
     if (normalized === "resolved") {
@@ -107,6 +118,14 @@ const ManageReports = () => {
     return "border-white/10 bg-white/10 text-emerald-100/70";
   };
 
+  if (!userInfo) {
+    return <Navigate to="/" />;
+  }
+
+  if (userInfo.role !== "operator") {
+    return <Navigate to="/home" />;
+  }
+
   return (
     <div className="app-shell h-screen overflow-hidden">
       <BackgroundFx />
@@ -115,7 +134,7 @@ const ManageReports = () => {
         <aside className="hidden h-full w-[250px] shrink-0 rounded-[28px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl xl:flex xl:flex-col">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100/50">
-              Admin Panel
+              Operator Panel
             </p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-emerald-50">
               Reports Center
@@ -172,7 +191,6 @@ const ManageReports = () => {
             >
               Home
             </Link>
-            
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -205,9 +223,6 @@ const ManageReports = () => {
               <p className="mt-2 text-3xl font-bold text-amber-200">
                 {pendingCount}
               </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                Needs admin review
-              </p>
             </MotionDiv>
 
             <MotionDiv
@@ -217,13 +232,10 @@ const ManageReports = () => {
               className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                In Progress
+                Approved
               </p>
               <p className="mt-2 text-3xl font-bold text-cyan-200">
-                {inProgressCount}
-              </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                Currently being handled
+                {approvedCount}
               </p>
             </MotionDiv>
 
@@ -238,9 +250,6 @@ const ManageReports = () => {
               </p>
               <p className="mt-2 text-3xl font-bold text-emerald-300">
                 {resolvedCount}
-              </p>
-              <p className="mt-2 text-sm text-emerald-100/65">
-                Completed reports
               </p>
             </MotionDiv>
           </div>
@@ -262,7 +271,7 @@ const ManageReports = () => {
               </div>
 
               <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/60">
-                {reports.length} total
+                Rejected: {rejectedCount}
               </div>
             </div>
 
@@ -343,22 +352,16 @@ const ManageReports = () => {
                               handleStatusChange(report._id, e.target.value)
                             }
                           >
-                            <option
-                              value="Pending"
-                              className="bg-[#0b1d17] text-emerald-50"
-                            >
+                            <option value="Pending" className="bg-[#0b1d17] text-emerald-50">
                               Pending
                             </option>
-                            <option
-                              value="In Progress"
-                              className="bg-[#0b1d17] text-emerald-50"
-                            >
-                              In Progress
+                            <option value="Approved" className="bg-[#0b1d17] text-emerald-50">
+                              Approved
                             </option>
-                            <option
-                              value="Resolved"
-                              className="bg-[#0b1d17] text-emerald-50"
-                            >
+                            <option value="Rejected" className="bg-[#0b1d17] text-emerald-50">
+                              Rejected
+                            </option>
+                            <option value="Resolved" className="bg-[#0b1d17] text-emerald-50">
                               Resolved
                             </option>
                           </select>

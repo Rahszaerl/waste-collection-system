@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BackgroundFx from "../../components/backgroundfx";
 import { barangays } from "../../data/barangays";
@@ -27,6 +27,8 @@ const ManageAnnouncements = () => {
   });
 
   useEffect(() => {
+    if (!userInfo || userInfo.role !== "admin") return;
+
     const fetchAnnouncements = async () => {
       try {
         const data = await getAnnouncements(userInfo.token);
@@ -39,7 +41,7 @@ const ManageAnnouncements = () => {
     };
 
     fetchAnnouncements();
-  }, [userInfo.token]);
+  }, [userInfo]);
 
   const refreshAnnouncements = async () => {
     const data = await getAnnouncements(userInfo.token);
@@ -97,11 +99,17 @@ const ManageAnnouncements = () => {
 
   const sidebarLinks = [
     { to: "/admin", label: "Dashboard" },
-    { to: "/admin/schedules", label: "Manage Schedules" },
-    { to: "/admin/reports", label: "Manage Reports" },
     { to: "/admin/users", label: "Manage Users" },
     { to: "/admin/announcements", label: "Manage Announcements" },
   ];
+
+  if (!userInfo) {
+    return <Navigate to="/" />;
+  }
+
+  if (userInfo.role !== "admin") {
+    return <Navigate to="/admin" />;
+  }
 
   return (
     <div className="app-shell h-screen overflow-hidden">
@@ -177,21 +185,13 @@ const ManageAnnouncements = () => {
               transition={{ duration: 0.35 }}
               className="rounded-[28px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl"
             >
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
-                    Form
-                  </p>
-                  <h3 className="mt-1 text-xl font-semibold text-emerald-50">
-                    {editingId ? "Edit Announcement" : "Create Announcement"}
-                  </h3>
-                </div>
-
-                {editingId && (
-                  <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-200">
-                    Editing
-                  </span>
-                )}
+              <div className="mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                  Form
+                </p>
+                <h3 className="mt-1 text-xl font-semibold text-emerald-50">
+                  {editingId ? "Edit Announcement" : "Create Announcement"}
+                </h3>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,10 +206,12 @@ const ManageAnnouncements = () => {
 
                 <textarea
                   placeholder="Announcement message"
-                  className="soft-input min-h-[140px]"
-                  rows="5"
+                  className="soft-input min-h-[160px]"
+                  rows="6"
                   value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, message: e.target.value })
+                  }
                   required
                 />
 
@@ -224,13 +226,13 @@ const ManageAnnouncements = () => {
                     <option value="All" className="bg-[#0b1d17] text-emerald-50">
                       All Barangays
                     </option>
-                    {barangays.map((b) => (
+                    {barangays.map((barangay) => (
                       <option
-                        key={b}
-                        value={b}
+                        key={barangay}
+                        value={barangay}
                         className="bg-[#0b1d17] text-emerald-50"
                       >
-                        {b}
+                        {barangay}
                       </option>
                     ))}
                   </select>
@@ -263,7 +265,7 @@ const ManageAnnouncements = () => {
                       onClick={resetForm}
                       className="soft-button soft-button-secondary"
                     >
-                      Cancel
+                      Cancel Edit
                     </button>
                   )}
                 </div>
@@ -301,10 +303,7 @@ const ManageAnnouncements = () => {
               ) : announcements.length === 0 ? (
                 <div className="rounded-[22px] border border-white/8 bg-black/20 px-4 py-8 text-center">
                   <p className="text-lg font-semibold text-emerald-50">
-                    No announcements yet
-                  </p>
-                  <p className="mt-2 text-sm text-emerald-100/65">
-                    Create your first announcement using the form on the left.
+                    No announcements found
                   </p>
                 </div>
               ) : (
@@ -314,7 +313,7 @@ const ManageAnnouncements = () => {
                       key={announcement._id}
                       className="rounded-[22px] border border-white/8 bg-black/20 p-4"
                     >
-                      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-3">
                             <h4 className="text-lg font-semibold text-emerald-50">
@@ -334,8 +333,11 @@ const ManageAnnouncements = () => {
                             </p>
                           </div>
 
-                          <p className="mt-3 text-xs text-emerald-100/55">
-                            Posted: {new Date(announcement.createdAt).toLocaleString()}
+                          <p className="mt-3 text-xs text-emerald-100/50">
+                            Posted:{" "}
+                            {announcement.createdAt
+                              ? new Date(announcement.createdAt).toLocaleString()
+                              : "No date"}
                           </p>
                         </div>
 

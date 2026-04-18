@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import BackgroundFx from "../../components/backgroundfx";
-import { barangays } from "../../data/barangays";
+import BackgroundFx from "../components/backgroundfx";
+import { barangays } from "../data/barangays";
 import {
   getSchedules,
   createSchedule,
   updateSchedule,
   deleteSchedule,
-} from "../../services/scheduleService";
+} from "../services/scheduleService";
 
 const MotionDiv = motion.div;
 
@@ -29,6 +29,8 @@ const ManageSchedules = () => {
   });
 
   useEffect(() => {
+    if (!userInfo || userInfo.role !== "operator") return;
+
     const fetchSchedules = async () => {
       try {
         const data = await getSchedules(userInfo.token);
@@ -41,7 +43,7 @@ const ManageSchedules = () => {
     };
 
     fetchSchedules();
-  }, [userInfo.token]);
+  }, [userInfo]);
 
   const resetForm = () => {
     setForm({
@@ -63,11 +65,16 @@ const ManageSchedules = () => {
     e.preventDefault();
 
     try {
+      const payload = {
+        ...form,
+        collectionDate: new Date(form.collectionDate).toISOString(),
+      };
+
       if (editingId) {
-        await updateSchedule(editingId, form, userInfo.token);
+        await updateSchedule(editingId, payload, userInfo.token);
         alert("Schedule updated successfully");
       } else {
-        await createSchedule(form, userInfo.token);
+        await createSchedule(payload, userInfo.token);
         alert("Schedule created successfully");
       }
 
@@ -104,11 +111,8 @@ const ManageSchedules = () => {
   };
 
   const sidebarLinks = [
-    { to: "/admin", label: "Dashboard" },
-    { to: "/admin/schedules", label: "Manage Schedules" },
-    { to: "/admin/reports", label: "Manage Reports" },
-    { to: "/admin/users", label: "Manage Users" },
-    { to: "/admin/announcements", label: "Manage Announcements" },
+    { to: "/operator/reports", label: "Manage Reports" },
+    { to: "/operator/schedules", label: "Manage Schedules" },
   ];
 
   const upcomingCount = useMemo(
@@ -166,6 +170,14 @@ const ManageSchedules = () => {
     return "border-white/10 bg-white/10 text-emerald-100/70";
   };
 
+  if (!userInfo) {
+    return <Navigate to="/" />;
+  }
+
+  if (userInfo.role !== "operator") {
+    return <Navigate to="/home" />;
+  }
+
   return (
     <div className="app-shell h-screen overflow-hidden">
       <BackgroundFx />
@@ -174,7 +186,7 @@ const ManageSchedules = () => {
         <aside className="hidden h-full w-[250px] shrink-0 rounded-[28px] border border-white/10 bg-white/[0.06] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-2xl xl:flex xl:flex-col">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100/50">
-              Admin Panel
+              Operator Panel
             </p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-emerald-50">
               Schedule Center
@@ -231,7 +243,6 @@ const ManageSchedules = () => {
             >
               Home
             </Link>
-            
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start">

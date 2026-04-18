@@ -8,9 +8,10 @@ import MyReports from "./pages/MyReports";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import OperatorRoute from "./components/OperatorRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageSchedules from "./pages/admin/ManageSchedules";
-import ManageReports from "./pages/admin/ManageReports";
+import ManageReports from "./pages/ManageReports";
+import ManageSchedules from "./pages/ManageSchedules";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageAnnouncements from "./pages/admin/ManageAnnouncements";
 
@@ -31,24 +32,6 @@ function App() {
         />
 
         <Route
-          path="/admin/schedules"
-          element={
-            <AdminRoute>
-              <ManageSchedules />
-            </AdminRoute>
-          }
-        />
-
-        <Route
-          path="/admin/reports"
-          element={
-            <AdminRoute>
-              <ManageReports />
-            </AdminRoute>
-          }
-        />
-
-        <Route
           path="/admin/users"
           element={
             <AdminRoute>
@@ -63,6 +46,24 @@ function App() {
             <AdminRoute>
               <ManageAnnouncements />
             </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/operator/schedules"
+          element={
+            <OperatorRoute>
+              <ManageSchedules />
+            </OperatorRoute>
+          }
+        />
+
+        <Route
+          path="/operator/reports"
+          element={
+            <OperatorRoute>
+              <ManageReports />
+            </OperatorRoute>
           }
         />
 

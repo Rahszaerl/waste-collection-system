@@ -30,6 +30,7 @@ export const signupUser = async (req, res) => {
       email: user.email,
       barangay: user.barangay,
       role: user.role,
+      status: user.status,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -43,18 +44,31 @@ export const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        barangay: user.barangay,
-        role: user.role,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({ message: "Invalid email or password" });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
+
+    if (user.status === "suspended") {
+      return res
+        .status(403)
+        .json({ message: "Your account is suspended. Please contact admin." });
+    }
+
+    if (user.status === "banned") {
+      return res
+        .status(403)
+        .json({ message: "Your account is banned. Please contact admin." });
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      barangay: user.barangay,
+      role: user.role,
+      status: user.status,
+      token: generateToken(user._id),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -89,6 +103,7 @@ export const updateMe = async (req, res) => {
       email: updatedUser.email,
       barangay: updatedUser.barangay,
       role: updatedUser.role,
+      status: updatedUser.status,
       token: generateToken(updatedUser._id),
     });
   } catch (error) {

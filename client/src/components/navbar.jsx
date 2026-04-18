@@ -24,10 +24,12 @@ const Navbar = () => {
     { to: "/profile", label: "Profile" },
   ];
 
-  const adminLinks =
-    user?.role === "admin" ? [{ to: "/admin", label: "Admin" }] : [];
+const dashboardLink =
+  user?.role === "admin"
+    ? { to: "/admin", label: "Admin" }
+    : null;
 
-  const allLinks = [...navLinks, ...adminLinks];
+  const allLinks = dashboardLink ? [...navLinks, dashboardLink] : navLinks;
 
   return (
     <MotionNav

@@ -26,11 +26,11 @@ const reportSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["Pending", "In Progress", "Resolved"],
-      default: "Pending",
-    },
+status: {
+  type: String,
+  enum: ["Pending", "Approved", "Rejected", "Resolved"],
+  default: "Pending",
+},
     photo: {
       type: String,
       default: "",

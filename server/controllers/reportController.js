@@ -44,6 +44,11 @@ export const getAllReports = async (req, res) => {
 export const updateReportStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    const allowedStatuses = ["Pending", "Approved", "Rejected", "Resolved"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid report status" });
+    }
 
     const report = await Report.findById(req.params.id);
 

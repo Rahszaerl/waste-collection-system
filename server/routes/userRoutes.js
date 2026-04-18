@@ -2,16 +2,16 @@ import express from "express";
 import {
   getAllUsers,
   updateUserRole,
-  deleteUser,
+  updateUserStatus,
 } from "../controllers/userController.js";
 
 import protect from "../middleware/authMiddleware.js";
-import adminOnly from "../middleware/roleMiddleware.js";
+import authorizeRoles from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", protect, adminOnly, getAllUsers);
-router.put("/:id", protect, adminOnly, updateUserRole);
-router.delete("/:id", protect, adminOnly, deleteUser);
+router.get("/", protect, authorizeRoles("admin"), getAllUsers);
+router.put("/:id/role", protect, authorizeRoles("admin"), updateUserRole);
+router.put("/:id/status", protect, authorizeRoles("admin"), updateUserStatus);
 
 export default router;
